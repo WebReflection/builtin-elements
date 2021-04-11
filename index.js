@@ -2,16 +2,21 @@ self.builtinElements = (function (exports) {
   'use strict';
 
   /*! (c) Andrea Giammarchi - ISC */
-  var ATTRIBUTE_CHANGED_CALLBACK = 'attributeChangedCallback';
-  var CONNECTED_CALLBACK = 'connectedCallback';
+  var CALLBACK = 'Callback';
+  var ATTRIBUTE_CHANGED_CALLBACK = 'attributeChanged' + CALLBACK;
+  var CONNECTED_CALLBACK = 'connected' + CALLBACK;
   var DISCONNECTED_CALLBACK = 'dis' + CONNECTED_CALLBACK;
-  var UPGRADED_CALLBACK = 'upgradedCallback';
-  var DOWNGRADED_CALLBACK = 'downgradedCallback';
+  var UPGRADED_CALLBACK = 'upgraded' + CALLBACK;
+  var DOWNGRADED_CALLBACK = 'downgraded' + CALLBACK;
   var getOwnPropertyNames = Object.getOwnPropertyNames,
       setPrototypeOf = Object.setPrototypeOf;
   var attributes = new WeakMap();
   var observed = new WeakMap();
   var natives = new Set();
+
+  var create = function create(tag, isSVG) {
+    return isSVG ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag);
+  };
 
   var loop = function loop(list, method, set) {
     for (var i = 0; i < list.length; i++) {
@@ -27,19 +32,6 @@ self.builtinElements = (function (exports) {
     }
   };
 
-  var HTMLSpecial = {
-    'Anchor': 'A',
-    'DList': 'DL',
-    'Directory': 'Dir',
-    'Heading': ['H6', 'H5', 'H4', 'H3', 'H2', 'H1'],
-    'Image': 'Img',
-    'OList': 'OL',
-    'Paragraph': 'P',
-    'TableCaption': 'Caption',
-    'TableCell': ['TH', 'TD'],
-    'TableRow': 'TR',
-    'UList': 'UL'
-  };
   var AttributesObserver = new MutationObserver(function (records) {
     for (var i = 0; i < records.length; i++) {
       var _records$i = records[i],
@@ -50,17 +42,10 @@ self.builtinElements = (function (exports) {
       if (attributes.has(_constructor) && attributes.get(_constructor).has(target) && ATTRIBUTE_CHANGED_CALLBACK in target) target[ATTRIBUTE_CHANGED_CALLBACK](attributeName, oldValue, target.getAttribute(attributeName));
     }
   });
-  var HTML = {};
-  var SVG = {};
-
-  var create = function create(tag, isSVG) {
-    return isSVG ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag);
-  };
   /**
    * Set back original element prototype and drops observers.
    * @param {Element} target the element to downgrade
    */
-
 
   var downgrade = function downgrade(target) {
     var constructor = target.constructor,
@@ -77,7 +62,9 @@ self.builtinElements = (function (exports) {
    * Upgrade an element to a specific class, if not an instance of it already.
    * @param {Element} target the element to upgrade
    * @param {Function} Class the class the element should be upgraded to
+   * @returns {Element} the `target` parameter after upgrade
    */
+
 
   var upgrade = function upgrade(target, Class) {
     if (!(target instanceof Class)) {
@@ -108,6 +95,24 @@ self.builtinElements = (function (exports) {
         if (target.isConnected && CONNECTED_CALLBACK in target) target[CONNECTED_CALLBACK]();
       }
     }
+
+    return target;
+  };
+
+  var SVG = {};
+  var HTML = {};
+  var HTMLSpecial = {
+    'Anchor': 'A',
+    'DList': 'DL',
+    'Directory': 'Dir',
+    'Heading': ['H6', 'H5', 'H4', 'H3', 'H2', 'H1'],
+    'Image': 'Img',
+    'OList': 'OL',
+    'Paragraph': 'P',
+    'TableCaption': 'Caption',
+    'TableCell': ['TH', 'TD'],
+    'TableRow': 'TR',
+    'UList': 'UL'
   };
   getOwnPropertyNames(window).forEach(function (name) {
     if (/^(HTML|SVG)/.test(name)) {
@@ -119,9 +124,7 @@ self.builtinElements = (function (exports) {
       natives.add(Native);
       [].concat(HTMLSpecial[Class] || Class).forEach(function (Tag) {
         (Namespace[Class] = Namespace[Tag] = function Element() {
-          var target = create(Tag, isSVG);
-          upgrade(target, this.constructor);
-          return target;
+          return upgrade(create(Tag, isSVG), this.constructor);
         }).prototype = Native.prototype;
       });
     }

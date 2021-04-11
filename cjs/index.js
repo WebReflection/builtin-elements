@@ -1,17 +1,22 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
-const ATTRIBUTE_CHANGED_CALLBACK = 'attributeChangedCallback';
-const CONNECTED_CALLBACK = 'connectedCallback';
+const CALLBACK = 'Callback';
+const ATTRIBUTE_CHANGED_CALLBACK = 'attributeChanged' + CALLBACK;
+const CONNECTED_CALLBACK = 'connected' + CALLBACK;
 const DISCONNECTED_CALLBACK = 'dis' + CONNECTED_CALLBACK;
-const UPGRADED_CALLBACK = 'upgradedCallback';
-const DOWNGRADED_CALLBACK = 'downgradedCallback';
+const UPGRADED_CALLBACK = 'upgraded' + CALLBACK;
+const DOWNGRADED_CALLBACK = 'downgraded' + CALLBACK;
 
 const {getOwnPropertyNames, setPrototypeOf} = Object;
 
 const attributes = new WeakMap;
 const observed = new WeakMap;
 const natives = new Set;
+
+const create = (tag, isSVG) => isSVG ?
+  document.createElementNS('http://www.w3.org/2000/svg', tag) :
+  document.createElement(tag);
 
 const loop = (list, method, set) => {
   for (let i = 0; i < list.length; i++) {
@@ -24,20 +29,6 @@ const loop = (list, method, set) => {
       loop(list[i].children || [], method, set);
     }
   }
-};
-
-const HTMLSpecial = {
-  'Anchor': 'A',
-  'DList': 'DL',
-  'Directory': 'Dir',
-  'Heading': ['H6', 'H5', 'H4', 'H3', 'H2', 'H1'],
-  'Image': 'Img',
-  'OList': 'OL',
-  'Paragraph': 'P',
-  'TableCaption': 'Caption',
-  'TableCell': ['TH', 'TD'],
-  'TableRow': 'TR',
-  'UList': 'UL'
 };
 
 const AttributesObserver = new MutationObserver(records => {
@@ -57,15 +48,6 @@ const AttributesObserver = new MutationObserver(records => {
   }
 });
 
-const HTML = {};
-exports.HTML = HTML;
-const SVG = {};
-exports.SVG = SVG;
-
-const create = (tag, isSVG) => isSVG ?
-  document.createElementNS('http://www.w3.org/2000/svg', tag) :
-  document.createElement(tag);
-
 /**
  * Set back original element prototype and drops observers.
  * @param {Element} target the element to downgrade
@@ -84,12 +66,12 @@ const downgrade = target => {
     );
   }
 };
-exports.downgrade = downgrade;
 
 /**
  * Upgrade an element to a specific class, if not an instance of it already.
  * @param {Element} target the element to upgrade
  * @param {Function} Class the class the element should be upgraded to
+ * @returns {Element} the `target` parameter after upgrade
  */
 const upgrade = (target, Class) => {
   if (!(target instanceof Class)) {
@@ -120,8 +102,24 @@ const upgrade = (target, Class) => {
         target[CONNECTED_CALLBACK]();
     }
   }
+  return target;
 };
-exports.upgrade = upgrade;
+
+const SVG = {};
+const HTML = {};
+const HTMLSpecial = {
+  'Anchor': 'A',
+  'DList': 'DL',
+  'Directory': 'Dir',
+  'Heading': ['H6', 'H5', 'H4', 'H3', 'H2', 'H1'],
+  'Image': 'Img',
+  'OList': 'OL',
+  'Paragraph': 'P',
+  'TableCaption': 'Caption',
+  'TableCell': ['TH', 'TD'],
+  'TableRow': 'TR',
+  'UList': 'UL'
+};
 
 getOwnPropertyNames(window).forEach(name => {
   if (/^(HTML|SVG)/.test(name)) {
@@ -133,9 +131,7 @@ getOwnPropertyNames(window).forEach(name => {
     natives.add(Native);
     [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
       (Namespace[Class] = Namespace[Tag] = function Element() {
-        const target = create(Tag, isSVG);
-        upgrade(target, this.constructor);
-        return target;
+        return upgrade(create(Tag, isSVG), this.constructor);
       }).prototype = Native.prototype;
     });
   }
@@ -148,3 +144,8 @@ new MutationObserver(records => {
     loop(addedNodes, CONNECTED_CALLBACK, new Set);
   }
 }).observe(document, {subtree: true, childList: true});
+
+exports.HTML = HTML;
+exports.SVG = SVG;
+exports.upgrade = upgrade;
+exports.downgrade = downgrade;

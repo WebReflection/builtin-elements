@@ -125,7 +125,7 @@ getOwnPropertyNames(window).forEach(name => {
     const Class = name.slice(Kind.length, -7) || 'Element';
     const Namespace = isSVG ? SVG : HTML;
     const Native = window[name];
-    natives.add(window[name]);
+    natives.add(Native);
     [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
       (Namespace[Class] = Namespace[Tag] = function Element() {
         const target = create(Tag, isSVG);

@@ -116,7 +116,7 @@ self.builtinElements = (function (exports) {
       var Class = name.slice(Kind.length, -7) || 'Element';
       var Namespace = isSVG ? SVG : HTML;
       var Native = window[name];
-      natives.add(window[name]);
+      natives.add(Native);
       [].concat(HTMLSpecial[Class] || Class).forEach(function (Tag) {
         (Namespace[Class] = Namespace[Tag] = function Element() {
           var target = create(Tag, isSVG);

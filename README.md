@@ -1,5 +1,9 @@
 # builtin-elements
 
+[![Coverage Status](https://coveralls.io/repos/github/WebReflection/builtin-elements/badge.svg?branch=main)](https://coveralls.io/github/WebReflection/builtin-elements?branch=main)
+
+<sup>**Social Media Photo by [zebbache djoubair](https://unsplash.com/@djoubair) on [Unsplash](https://unsplash.com/)**</sup>
+
 A zero friction custom elements like primitive.
 
   * zero polyfills needed

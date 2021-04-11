@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>builtin-elements</title>
+  <script defer src="../min.js"></script>
+  <script>
+  this.onload = function () {
+    var Div = builtinElements.HTML.Div;
+    function IE11() {'use strict';
+      document.body.appendChild(
+        document.createElement('p')
+      ).textContent = 'constructor';
+      var self = Div.apply(this, arguments);
+      return self;
+    }
+    IE11.observedAttributes = ['test'];
+    IE11.prototype = {
+      constructor: IE11,
+      attributeChangedCallback: function (name, old, val) {
+        document.body.appendChild(
+          document.createElement('p')
+        ).textContent = 'attributeChangedCallback: ' + name + ' ' + old + ' ' + val;
+      },
+      connectedCallback: function () {
+        document.body.appendChild(
+          document.createElement('p')
+        ).textContent = 'connectedCallback';
+      },
+      disconnectedCallback: function () {
+        document.body.appendChild(
+          document.createElement('p')
+        ).textContent = 'disconnectedCallback';
+      },
+      upgradedCallback: function () {
+        document.body.appendChild(
+          document.createElement('p')
+        ).textContent = 'upgradedCallback';
+      },
+      downgradedCallback: function () {
+        document.body.appendChild(
+          document.createElement('p')
+        ).textContent = 'downgradedCallback';
+      }
+    };
+    Object.setPrototypeOf(IE11, Div);
+    Object.setPrototypeOf(IE11.prototype, Div.prototype);
+    var div = document.body.appendChild(new IE11);
+    div.setAttribute('test', 123);
+    setTimeout(function () {
+      document.body.removeChild(div);
+      setTimeout(function () {
+        builtinElements.downgrade(div);
+        div.removeAttribute('test');
+      }, 100);
+    }, 100);
+  };
+  </script>
+</head>
+<body></body>
+</html>

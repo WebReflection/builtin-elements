@@ -10,8 +10,8 @@ A zero friction custom elements like primitive.
   * nothing to `define(...)`
   * same Custom Elements mechanism plus ...
   * ... the ability to `upgrade` or `downgrade` any element, at any time (*hydration*)
-  * all in [less than 1K](./es.js) once minified
-  * it works even on IE11
+  * all in [less than 1K](./es.js) once minified+gzipped <sup><sub>(less than 2K without compression)</sub></sup>
+  * it works even on IE11 <sup><sub>(requires transpilation if written as ES6+)</sub></sup>
 
 ```js
 import {HTML, SVG} from 'builtin-elements';
@@ -26,7 +26,13 @@ class MyButton extends HTML.Button {
 document.body.appendChild(new MyButton('Hello!'));
 ```
 
-**[Live Demo](https://webreflection.github.io/builtin-elements/test/)**
+- - -
+
+**[Live Demo](https://webreflection.github.io/builtin-elements/test/)** <sup><sub>(compatible with IE11)</sub></sup>
+
+**[µhtml example](https://codepen.io/WebReflection/pen/rNjJrXv?editors=0010)**
+
+- - -
 
 ## API
 
@@ -47,7 +53,7 @@ This module exports the following utilities:
 
 ```js
 // full class features
-class BuiltinElement extends HTML.Div {
+class BuiltinElement extends HTML.Element {
 
   // exact same Custom Elements primitives
   static get observedAttributes() { return ['test']; }

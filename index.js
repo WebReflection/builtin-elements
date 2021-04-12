@@ -2,6 +2,8 @@ self.builtinElements = (function (exports) {
   'use strict';
 
   /*! (c) Andrea Giammarchi - ISC */
+  var CONSTRUCTOR = 'constructor';
+  var PROTOTYPE = 'prototype';
   var CALLBACK = 'Callback';
   var ATTRIBUTE_CHANGED_CALLBACK = 'attributeChanged' + CALLBACK;
   var CONNECTED_CALLBACK = 'connected' + CALLBACK;
@@ -49,14 +51,11 @@ self.builtinElements = (function (exports) {
    */
 
   var downgrade = function downgrade(target) {
-    var constructor = target.constructor,
-        tagName = target.tagName;
-
-    if (!natives.has(constructor)) {
+    if (!natives.has(target[CONSTRUCTOR])) {
       attributes["delete"](target);
       observed["delete"](target);
       if (DOWNGRADED_CALLBACK in target) target[DOWNGRADED_CALLBACK]();
-      setPrototypeOf(target, create(tagName, 'ownerSVGElement' in target).constructor.prototype);
+      setPrototypeOf(target, create(target.tagName, 'ownerSVGElement' in target)[CONSTRUCTOR][PROTOTYPE]);
     }
   };
   /**
@@ -70,12 +69,11 @@ self.builtinElements = (function (exports) {
   var upgrade = function upgrade(target, Class) {
     if (!(target instanceof Class)) {
       downgrade(target);
-      var observedAttributes = Class.observedAttributes,
-          prototype = Class.prototype;
-      setPrototypeOf(target, prototype);
+      setPrototypeOf(target, Class[PROTOTYPE]);
       if (UPGRADED_CALLBACK in target) target[UPGRADED_CALLBACK]();
+      var observedAttributes = Class.observedAttributes;
 
-      if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in prototype) {
+      if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in target) {
         attributes.set(target, 0);
         AttributesObserver.observe(target, {
           attributeFilter: observedAttributes,
@@ -117,7 +115,7 @@ self.builtinElements = (function (exports) {
   getOwnPropertyNames(window).forEach(function (name) {
     if (/^(HTML|SVG)/.test(name)) {
       var Kind = RegExp.$1;
-      var isSVG = Kind === 'SVG';
+      var isSVG = Kind == 'SVG';
       var Class = name.slice(Kind.length, -7) || 'Element';
       var Namespace = isSVG ? SVG : HTML;
       var Native = window[name];
@@ -125,8 +123,8 @@ self.builtinElements = (function (exports) {
       [].concat(HTMLSpecial[Class] || Class).forEach(function (Tag) {
         var tag = Tag.toLowerCase();
         (Namespace[Class] = Namespace[Tag] = function Element() {
-          return upgrade(create(tag, isSVG), this.constructor);
-        }).prototype = Native.prototype;
+          return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
+        })[PROTOTYPE] = Native[PROTOTYPE];
       });
     }
   });

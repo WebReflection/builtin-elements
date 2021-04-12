@@ -1,6 +1,8 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
+const CONSTRUCTOR = 'constructor';
+const PROTOTYPE = 'prototype';
 const CALLBACK = 'Callback';
 const ATTRIBUTE_CHANGED_CALLBACK = 'attributeChanged' + CALLBACK;
 const CONNECTED_CALLBACK = 'connected' + CALLBACK;
@@ -49,15 +51,14 @@ const AttributesObserver = new MutationObserver(records => {
  * @param {Element} target the element to downgrade
  */
 const downgrade = target => {
-  const {constructor, tagName} = target;
-  if (!natives.has(constructor)) {
+  if (!natives.has(target[CONSTRUCTOR])) {
     attributes.delete(target);
     observed.delete(target);
     if (DOWNGRADED_CALLBACK in target)
       target[DOWNGRADED_CALLBACK]();
     setPrototypeOf(
       target,
-      create(tagName, 'ownerSVGElement' in target).constructor.prototype
+      create(target.tagName, 'ownerSVGElement' in target)[CONSTRUCTOR][PROTOTYPE]
     );
   }
 };
@@ -71,11 +72,11 @@ const downgrade = target => {
 const upgrade = (target, Class) => {
   if (!(target instanceof Class)) {
     downgrade(target);
-    const {observedAttributes, prototype} = Class;
-    setPrototypeOf(target, prototype);
+    setPrototypeOf(target, Class[PROTOTYPE]);
     if (UPGRADED_CALLBACK in target)
       target[UPGRADED_CALLBACK]();
-    if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in prototype) {
+    const {observedAttributes} = Class;
+    if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in target) {
       attributes.set(target, 0);
       AttributesObserver.observe(target, {
         attributeFilter: observedAttributes,
@@ -117,7 +118,7 @@ const HTMLSpecial = {
 getOwnPropertyNames(window).forEach(name => {
   if (/^(HTML|SVG)/.test(name)) {
     const {$1: Kind} = RegExp;
-    const isSVG = Kind === 'SVG';
+    const isSVG = Kind == 'SVG';
     const Class = name.slice(Kind.length, -7) || 'Element';
     const Namespace = isSVG ? SVG : HTML;
     const Native = window[name];
@@ -125,8 +126,8 @@ getOwnPropertyNames(window).forEach(name => {
     [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
       const tag = Tag.toLowerCase();
       (Namespace[Class] = Namespace[Tag] = function Element() {
-        return upgrade(create(tag, isSVG), this.constructor);
-      }).prototype = Native.prototype;
+        return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
+      })[PROTOTYPE] = Native[PROTOTYPE];
     });
   }
 });

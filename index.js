@@ -20,14 +20,16 @@ self.builtinElements = (function (exports) {
 
   var loop = function loop(list, method, set) {
     for (var i = 0; i < list.length; i++) {
-      if (!set.has(list[i])) {
-        set.add(list[i]);
+      var node = list[i];
+
+      if (!set.has(node)) {
+        set.add(node);
         /* c8 ignore start */
 
-        if (observed.has(list[i]) && method in list[i]) list[i][method]();
+        if (observed.has(node) && method in node) node[method]();
         /* c8 ignore stop */
 
-        loop(list[i].children || [], method, set);
+        loop(node.children || [], method, set);
       }
     }
   };
@@ -38,8 +40,7 @@ self.builtinElements = (function (exports) {
           target = _records$i.target,
           attributeName = _records$i.attributeName,
           oldValue = _records$i.oldValue;
-      var _constructor = target.constructor;
-      if (attributes.has(_constructor) && attributes.get(_constructor).has(target) && ATTRIBUTE_CHANGED_CALLBACK in target) target[ATTRIBUTE_CHANGED_CALLBACK](attributeName, oldValue, target.getAttribute(attributeName));
+      if (attributes.has(target)) target[ATTRIBUTE_CHANGED_CALLBACK](attributeName, oldValue, target.getAttribute(attributeName));
     }
   });
   /**
@@ -52,7 +53,7 @@ self.builtinElements = (function (exports) {
         tagName = target.tagName;
 
     if (!natives.has(constructor)) {
-      if (attributes.has(constructor)) attributes.get(constructor)["delete"](target);
+      attributes["delete"](target);
       observed["delete"](target);
       if (DOWNGRADED_CALLBACK in target) target[DOWNGRADED_CALLBACK]();
       setPrototypeOf(target, create(tagName, 'ownerSVGElement' in target).constructor.prototype);
@@ -74,9 +75,8 @@ self.builtinElements = (function (exports) {
       setPrototypeOf(target, prototype);
       if (UPGRADED_CALLBACK in target) target[UPGRADED_CALLBACK]();
 
-      if (observedAttributes) {
-        if (!attributes.has(Class)) attributes.set(Class, new WeakMap());
-        attributes.get(Class).set(target, 0);
+      if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in prototype) {
+        attributes.set(target, 0);
         AttributesObserver.observe(target, {
           attributeFilter: observedAttributes,
           attributeOldValue: true,
@@ -86,7 +86,7 @@ self.builtinElements = (function (exports) {
         for (var i = 0; i < observedAttributes.length; i++) {
           var name = observedAttributes[i];
           var value = target.getAttribute(name);
-          if (value != null && ATTRIBUTE_CHANGED_CALLBACK in target) target[ATTRIBUTE_CHANGED_CALLBACK](name, null, value);
+          if (value != null) target[ATTRIBUTE_CHANGED_CALLBACK](name, null, value);
         }
       }
 
@@ -123,8 +123,9 @@ self.builtinElements = (function (exports) {
       var Native = window[name];
       natives.add(Native);
       [].concat(HTMLSpecial[Class] || Class).forEach(function (Tag) {
+        var tag = Tag.toLowerCase();
         (Namespace[Class] = Namespace[Tag] = function Element() {
-          return upgrade(create(Tag, isSVG), this.constructor);
+          return upgrade(create(tag, isSVG), this.constructor);
         }).prototype = Native.prototype;
       });
     }

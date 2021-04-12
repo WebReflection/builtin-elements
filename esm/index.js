@@ -19,13 +19,14 @@ const create = (tag, isSVG) => isSVG ?
 
 const loop = (list, method, set) => {
   for (let i = 0; i < list.length; i++) {
-    if (!set.has(list[i])) {
-      set.add(list[i]);
+    const node = list[i];
+    if (!set.has(node)) {
+      set.add(node);
       /* c8 ignore start */
-      if (observed.has(list[i]) && method in list[i])
-        list[i][method]();
+      if (observed.has(node) && method in node)
+        node[method]();
       /* c8 ignore stop */
-      loop(list[i].children || [], method, set);
+      loop(node.children || [], method, set);
     }
   }
 };
@@ -33,12 +34,7 @@ const loop = (list, method, set) => {
 const AttributesObserver = new MutationObserver(records => {
   for (let i = 0; i < records.length; i++) {
     const {target, attributeName, oldValue} = records[i];
-    const {constructor} = target;
-    if (
-      attributes.has(constructor) &&
-      attributes.get(constructor).has(target) &&
-      ATTRIBUTE_CHANGED_CALLBACK in target
-    )
+    if (attributes.has(target))
       target[ATTRIBUTE_CHANGED_CALLBACK](
         attributeName,
         oldValue,
@@ -54,8 +50,7 @@ const AttributesObserver = new MutationObserver(records => {
 const downgrade = target => {
   const {constructor, tagName} = target;
   if (!natives.has(constructor)) {
-    if (attributes.has(constructor))
-      attributes.get(constructor).delete(target);
+    attributes.delete(target);
     observed.delete(target);
     if (DOWNGRADED_CALLBACK in target)
       target[DOWNGRADED_CALLBACK]();
@@ -79,10 +74,8 @@ const upgrade = (target, Class) => {
     setPrototypeOf(target, prototype);
     if (UPGRADED_CALLBACK in target)
       target[UPGRADED_CALLBACK]();
-    if (observedAttributes) {
-      if (!attributes.has(Class))
-        attributes.set(Class, new WeakMap);
-      attributes.get(Class).set(target, 0);
+    if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in prototype) {
+      attributes.set(target, 0);
       AttributesObserver.observe(target, {
         attributeFilter: observedAttributes,
         attributeOldValue: true,
@@ -91,7 +84,7 @@ const upgrade = (target, Class) => {
       for (let i = 0; i < observedAttributes.length; i++) {
         const name = observedAttributes[i];
         const value = target.getAttribute(name);
-        if (value != null && ATTRIBUTE_CHANGED_CALLBACK in target)
+        if (value != null)
           target[ATTRIBUTE_CHANGED_CALLBACK](name, null, value);
       }
     }
@@ -129,8 +122,9 @@ getOwnPropertyNames(window).forEach(name => {
     const Native = window[name];
     natives.add(Native);
     [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
+      const tag = Tag.toLowerCase();
       (Namespace[Class] = Namespace[Tag] = function Element() {
-        return upgrade(create(Tag, isSVG), this.constructor);
+        return upgrade(create(tag, isSVG), this.constructor);
       }).prototype = Native.prototype;
     });
   }

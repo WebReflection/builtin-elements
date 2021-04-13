@@ -2,6 +2,7 @@ const {document, window, MutationObserver} = require('linkedom').parseHTML('<!do
 
 global.window = window;
 global.document = document;
+global.Element = window.Element;
 global.MutationObserver = MutationObserver;
 
 window.HTMLButtonElement = window.HTMLButtonElement;

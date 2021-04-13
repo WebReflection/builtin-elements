@@ -1,6 +1,14 @@
 self.builtinElements = (function (exports) {
   'use strict';
 
+  /*! (c) Andrea Giammarchi - ISC */
+  if (!('isConnected' in Element.prototype)) Object.defineProperty(Element.prototype, 'isConnected', {
+    configurable: true,
+    get: function get() {
+      return !(this.ownerDocument.compareDocumentPosition(this) & this.DOCUMENT_POSITION_DISCONNECTED);
+    }
+  });
+
   var TRUE = true,
       FALSE = false;
   var QSA = 'querySelectorAll';

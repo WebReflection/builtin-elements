@@ -1,5 +1,6 @@
 /*! (c) Andrea Giammarchi - ISC */
 
+import '@ungap/is-connected';
 import {notify} from 'element-notifier';
 
 const CONSTRUCTOR = 'constructor';

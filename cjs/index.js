@@ -1,6 +1,7 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
+require('@ungap/is-connected');
 const {notify} = require('element-notifier');
 
 const CONSTRUCTOR = 'constructor';

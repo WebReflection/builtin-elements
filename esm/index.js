@@ -18,9 +18,10 @@ const attributes = new WeakMap;
 const observed = new WeakMap;
 const natives = new Set;
 
-const create = (tag, isSVG) => isSVG ?
-  document.createElementNS('http://www.w3.org/2000/svg', tag) :
-  document.createElement(tag);
+const create = (tag, isSVG) => document.createElementNS(
+  isSVG ? 'http://www.w3.org/2000/svg' : '',
+  tag
+);
 
 const AttributesObserver = new MutationObserver(records => {
   for (let i = 0; i < records.length; i++) {

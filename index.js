@@ -75,7 +75,7 @@ self.builtinElements = (function (exports) {
   var natives = new Set();
 
   var create = function create(tag, isSVG) {
-    return isSVG ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag);
+    return document.createElementNS(isSVG ? 'http://www.w3.org/2000/svg' : '', tag);
   };
 
   var AttributesObserver = new MutationObserver(function (records) {

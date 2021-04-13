@@ -124,6 +124,7 @@ getOwnPropertyNames(window).forEach(name => {
 
 notify((node, connected) => {
   if (observed.has(node)) {
+    /* c8 ignore next */
     const method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
     if (method in node)
       node[method]();

@@ -46,7 +46,10 @@ class OverButton extends MyButton {
 
 class Shadowed extends OverButton {
   connectedCallback() {
-    console.log('connected');
+    console.log('connected', this.outerHTML);
+  }
+  disconnectedCallback() {
+    console.log('disconnected');
   }
 }
 
@@ -54,16 +57,24 @@ let button = document.body.appendChild(new OverButton('hello'));
 
 upgrade(button, OverButton);
 button.setAttribute('test', 456);
-upgrade(button, Shadowed);
 
-button.remove();
+setTimeout(() => {
+  upgrade(button, Shadowed);
 
-downgrade(button);
-button.removeAttribute('test');
+  setTimeout(() => {
+    button.remove();
 
-document.body.appendChild(new OverButton('world')).setAttribute('test', 123);
+    setTimeout(() => {
 
-class MyRect extends SVG.Element {}
-document.body.appendChild(new MyRect);
+      downgrade(button);
+      button.removeAttribute('test');
 
-console.log(document.toString());
+      document.body.appendChild(new OverButton('world')).setAttribute('test', 123);
+
+      class MyRect extends SVG.Element {}
+      document.body.appendChild(new MyRect);
+
+      console.log(document.toString());
+    });
+  });
+});

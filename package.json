@@ -1,7 +1,7 @@
 {
   "name": "builtin-elements",
   "version": "0.1.4",
-  "description": "",
+  "description": "[![Coverage Status](https://coveralls.io/repos/github/WebReflection/builtin-elements/badge.svg?branch=main)](https://coveralls.io/github/WebReflection/builtin-elements?branch=main)",
   "main": "./cjs/index.js",
   "scripts": {
     "build": "npm run cjs && npm run rollup:es && npm run rollup:babel && npm run min && npm run test && npm run size",
@@ -42,5 +42,16 @@
     },
     "./package.json": "./package.json"
   },
-  "unpkg": "min.js"
+  "unpkg": "min.js",
+  "dependencies": {
+    "element-notifier": "^0.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/builtin-elements.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WebReflection/builtin-elements/issues"
+  },
+  "homepage": "https://github.com/WebReflection/builtin-elements#readme"
 }

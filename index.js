@@ -1,6 +1,48 @@
 self.builtinElements = (function (exports) {
   'use strict';
 
+  var TRUE = true,
+      FALSE = false;
+  var QSA = 'querySelectorAll';
+  var notify = function notify(callback) {
+    var loop = function loop(nodes, added, removed, connected, pass) {
+      for (var i = 0, length = nodes.length; i < length; i++) {
+        var node = nodes[i];
+
+        if (pass || QSA in node) {
+          if (connected) {
+            if (!added.has(node)) {
+              added.add(node);
+              removed["delete"](node);
+              callback(node, connected);
+            }
+          } else if (!removed.has(node)) {
+            removed.add(node);
+            added["delete"](node);
+            callback(node, connected);
+          }
+
+          if (!pass) loop((node.shadowRoot || node)[QSA]('*'), added, removed, connected, TRUE);
+        }
+      }
+    };
+
+    var observer = new MutationObserver(function (records) {
+      for (var added = new Set(), removed = new Set(), i = 0, length = records.length; i < length; i++) {
+        var _records$i = records[i],
+            addedNodes = _records$i.addedNodes,
+            removedNodes = _records$i.removedNodes;
+        loop(removedNodes, added, removed, FALSE, FALSE);
+        loop(addedNodes, added, removed, TRUE, FALSE);
+      }
+    });
+    observer.observe(document, {
+      subtree: TRUE,
+      childList: TRUE
+    });
+    return observer;
+  };
+
   /*! (c) Andrea Giammarchi - ISC */
   var CONSTRUCTOR = 'constructor';
   var PROTOTYPE = 'prototype';
@@ -18,22 +60,6 @@ self.builtinElements = (function (exports) {
 
   var create = function create(tag, isSVG) {
     return isSVG ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag);
-  };
-
-  var loop = function loop(list, method, set) {
-    for (var i = 0; i < list.length; i++) {
-      var node = list[i];
-
-      if (!set.has(node)) {
-        set.add(node);
-        /* c8 ignore start */
-
-        if (observed.has(node) && method in node) node[method]();
-        /* c8 ignore stop */
-
-        loop(node.children || [], method, set);
-      }
-    }
   };
 
   var AttributesObserver = new MutationObserver(function (records) {
@@ -128,17 +154,11 @@ self.builtinElements = (function (exports) {
       });
     }
   });
-  new MutationObserver(function (records) {
-    for (var i = 0; i < records.length; i++) {
-      var _records$i2 = records[i],
-          addedNodes = _records$i2.addedNodes,
-          removedNodes = _records$i2.removedNodes;
-      loop(removedNodes, DISCONNECTED_CALLBACK, new Set());
-      loop(addedNodes, CONNECTED_CALLBACK, new Set());
+  notify(function (node, connected) {
+    if (observed.has(node)) {
+      var method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
+      if (method in node) node[method]();
     }
-  }).observe(document, {
-    subtree: true,
-    childList: true
   });
 
   exports.HTML = HTML;

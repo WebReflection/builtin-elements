@@ -1,5 +1,7 @@
 /*! (c) Andrea Giammarchi - ISC */
 
+import {notify} from 'element-notifier';
+
 const CONSTRUCTOR = 'constructor';
 const PROTOTYPE = 'prototype';
 const CALLBACK = 'Callback';
@@ -18,20 +20,6 @@ const natives = new Set;
 const create = (tag, isSVG) => isSVG ?
   document.createElementNS('http://www.w3.org/2000/svg', tag) :
   document.createElement(tag);
-
-const loop = (list, method, set) => {
-  for (let i = 0; i < list.length; i++) {
-    const node = list[i];
-    if (!set.has(node)) {
-      set.add(node);
-      /* c8 ignore start */
-      if (observed.has(node) && method in node)
-        node[method]();
-      /* c8 ignore stop */
-      loop(node.children || [], method, set);
-    }
-  }
-};
 
 const AttributesObserver = new MutationObserver(records => {
   for (let i = 0; i < records.length; i++) {
@@ -134,12 +122,12 @@ getOwnPropertyNames(window).forEach(name => {
   }
 });
 
-new MutationObserver(records => {
-  for (let i = 0; i < records.length; i++) {
-    const {addedNodes, removedNodes} = records[i];
-    loop(removedNodes, DISCONNECTED_CALLBACK, new Set);
-    loop(addedNodes, CONNECTED_CALLBACK, new Set);
+notify((node, connected) => {
+  if (observed.has(node)) {
+    const method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
+    if (method in node)
+      node[method]();
   }
-}).observe(document, {subtree: true, childList: true});
+});
 
 export {HTML, SVG, upgrade, downgrade};

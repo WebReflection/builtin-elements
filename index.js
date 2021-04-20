@@ -176,7 +176,7 @@ self.builtinElements = (function (exports) {
       });
     }
   });
-  notify(function (node, connected) {
+  var observer = notify(function (node, connected) {
     if (observed.has(node)) {
       /* c8 ignore next */
       var method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
@@ -187,6 +187,7 @@ self.builtinElements = (function (exports) {
   exports.HTML = HTML;
   exports.SVG = SVG;
   exports.downgrade = downgrade;
+  exports.observer = observer;
   exports.upgrade = upgrade;
 
   return exports;

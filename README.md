@@ -10,7 +10,7 @@ A zero friction custom elements like primitive.
   * nothing to `define(...)`
   * same Custom Elements mechanism plus ...
   * ... the ability to `upgrade` or `downgrade` any element, at any time (*hydration*)
-  * all in [less than 1K](./es.js) once minified+gzipped <sup><sub>(less than 2K without compression)</sub></sup>
+  * all in [~1K](./es.js) once minified+gzipped <sup><sub>(~2K without compression)</sub></sup>
   * it works even on IE11 <sup><sub>(requires transpilation if written as ES6+)</sub></sup>
 
 ```js
@@ -52,6 +52,7 @@ This module exports the following utilities:
   * An `upgrade(element, Class)` helper to manually upgrade any element at any time:
     * no replacement, hence nothing is lost or changed
   * A `downgrade(element)` utility to drop all notifications about anything when/if needed
+  * An `observer`, from *element-notifier*, able to [.add(specialNodes)](https://github.com/WebReflection/element-notifier#about-shadowdom) to observe. Also the main library observer that can be *disconnected* whenever is needed.
 
 ```js
 // full class features

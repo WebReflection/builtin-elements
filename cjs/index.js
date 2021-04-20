@@ -125,7 +125,7 @@ getOwnPropertyNames(window).forEach(name => {
   }
 });
 
-notify((node, connected) => {
+const observer = notify((node, connected) => {
   if (observed.has(node)) {
     /* c8 ignore next */
     const method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
@@ -138,3 +138,4 @@ exports.HTML = HTML;
 exports.SVG = SVG;
 exports.upgrade = upgrade;
 exports.downgrade = downgrade;
+exports.observer = observer;

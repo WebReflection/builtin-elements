@@ -12,6 +12,13 @@ self.builtinElements = (function (exports) {
   var TRUE = true,
       FALSE = false;
   var QSA = 'querySelectorAll';
+
+  function add(node) {
+    this.observe(node, {
+      subtree: TRUE,
+      childList: TRUE
+    });
+  }
   /**
    * Start observing a generic document or root element.
    * @param {Function} callback triggered per each dis/connected node
@@ -19,6 +26,7 @@ self.builtinElements = (function (exports) {
    * @param {Function?} MO by default, the global MutationObserver
    * @returns {MutationObserver}
    */
+
 
   var notify = function notify(callback, root, MO) {
     var loop = function loop(nodes, added, removed, connected, pass) {
@@ -38,7 +46,7 @@ self.builtinElements = (function (exports) {
             callback(node, connected);
           }
 
-          if (!pass) loop((node.shadowRoot || node)[QSA]('*'), added, removed, connected, TRUE);
+          if (!pass) loop(node[QSA]('*'), added, removed, connected, TRUE);
         }
       }
     };
@@ -52,10 +60,8 @@ self.builtinElements = (function (exports) {
         loop(addedNodes, added, removed, TRUE, FALSE);
       }
     });
-    observer.observe(root || document, {
-      subtree: TRUE,
-      childList: TRUE
-    });
+    observer.add = add;
+    observer.add(root || document);
     return observer;
   };
 

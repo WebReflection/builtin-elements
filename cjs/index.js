@@ -4,6 +4,7 @@
 require('@ungap/is-connected');
 const {notify} = require('element-notifier');
 
+const ELEMENT = 'Element';
 const CONSTRUCTOR = 'constructor';
 const PROTOTYPE = 'prototype';
 const CALLBACK = 'Callback';
@@ -105,22 +106,35 @@ const HTMLSpecial = {
   'TableCaption': 'Caption',
   'TableCell': ['TH', 'TD'],
   'TableRow': 'TR',
-  'UList': 'UL'
+  'UList': 'UL',
+  // Generic Element based Classes
+  [ELEMENT]: [
+    'Article', 'Aside',
+    'Footer',
+    'Header',
+    'Main',
+    'Nav',
+    'Section',
+    ELEMENT
+  ]
 };
 
 getOwnPropertyNames(window).forEach(name => {
   if (/^(HTML|SVG)/.test(name)) {
     const {$1: Kind} = RegExp;
     const isSVG = Kind == 'SVG';
-    const Class = name.slice(Kind.length, -7) || 'Element';
+    const Class = name.slice(Kind.length, -7) || ELEMENT;
     const Namespace = isSVG ? SVG : HTML;
     const Native = window[name];
     natives.add(Native);
     [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
       const tag = Tag.toLowerCase();
-      (Namespace[Class] = Namespace[Tag] = function Element() {
+      Element.tagName = tag;
+      Element[PROTOTYPE] = Native[PROTOTYPE];
+      Namespace[Class] = Namespace[Tag] = Element;
+      function Element() {
         return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
-      })[PROTOTYPE] = Native[PROTOTYPE];
+      }
     });
   }
 });

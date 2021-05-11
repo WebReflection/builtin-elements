@@ -48,6 +48,7 @@ This module exports the following utilities:
     * `class UL extends HTML.UL {}`
     * `class UL extends HTML.UList {}`
     * ... and all available *HTML* natives ...
+    * `class Main extends HTML.Main {}` works too, together with `Header`, `Footer`, `Section`, `Article`, and others
   * An `SVG` namespace to extend too
   * An `upgrade(element, Class)` helper to manually upgrade any element at any time:
     * no replacement, hence nothing is lost or changed

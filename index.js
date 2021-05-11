@@ -1,6 +1,21 @@
 self.builtinElements = (function (exports) {
   'use strict';
 
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
   /*! (c) Andrea Giammarchi - ISC */
   if (!('isConnected' in Element.prototype)) Object.defineProperty(Element.prototype, 'isConnected', {
     configurable: true,
@@ -65,7 +80,7 @@ self.builtinElements = (function (exports) {
     return observer;
   };
 
-  /*! (c) Andrea Giammarchi - ISC */
+  var ELEMENT = 'Element';
   var CONSTRUCTOR = 'constructor';
   var PROTOTYPE = 'prototype';
   var CALLBACK = 'Callback';
@@ -147,7 +162,8 @@ self.builtinElements = (function (exports) {
 
   var SVG = {};
   var HTML = {};
-  var HTMLSpecial = {
+
+  var HTMLSpecial = _defineProperty({
     'Anchor': 'A',
     'DList': 'DL',
     'Directory': 'Dir',
@@ -159,20 +175,25 @@ self.builtinElements = (function (exports) {
     'TableCell': ['TH', 'TD'],
     'TableRow': 'TR',
     'UList': 'UL'
-  };
+  }, ELEMENT, ['Article', 'Aside', 'Footer', 'Header', 'Main', 'Nav', 'Section', ELEMENT]);
+
   getOwnPropertyNames(window).forEach(function (name) {
     if (/^(HTML|SVG)/.test(name)) {
       var Kind = RegExp.$1;
       var isSVG = Kind == 'SVG';
-      var Class = name.slice(Kind.length, -7) || 'Element';
+      var Class = name.slice(Kind.length, -7) || ELEMENT;
       var Namespace = isSVG ? SVG : HTML;
       var Native = window[name];
       natives.add(Native);
       [].concat(HTMLSpecial[Class] || Class).forEach(function (Tag) {
         var tag = Tag.toLowerCase();
-        (Namespace[Class] = Namespace[Tag] = function Element() {
+        Element.tagName = tag;
+        Element[PROTOTYPE] = Native[PROTOTYPE];
+        Namespace[Class] = Namespace[Tag] = Element;
+
+        function Element() {
           return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
-        })[PROTOTYPE] = Native[PROTOTYPE];
+        }
       });
     }
   });

@@ -4,15 +4,17 @@
 require('@ungap/is-connected');
 const {notify} = require('element-notifier');
 
-const ELEMENT = 'Element';
-const CONSTRUCTOR = 'constructor';
-const PROTOTYPE = 'prototype';
-const CALLBACK = 'Callback';
-const ATTRIBUTE_CHANGED_CALLBACK = 'attributeChanged' + CALLBACK;
-const CONNECTED_CALLBACK = 'connected' + CALLBACK;
-const DISCONNECTED_CALLBACK = 'dis' + CONNECTED_CALLBACK;
-const UPGRADED_CALLBACK = 'upgraded' + CALLBACK;
-const DOWNGRADED_CALLBACK = 'downgraded' + CALLBACK;
+const {
+  ELEMENT,
+  CONSTRUCTOR,
+  PROTOTYPE,
+  ATTRIBUTE_CHANGED_CALLBACK,
+  CONNECTED_CALLBACK,
+  DISCONNECTED_CALLBACK,
+  UPGRADED_CALLBACK,
+  DOWNGRADED_CALLBACK,
+  HTMLSpecial
+} = require('./constants.js');
 
 const {getOwnPropertyNames, setPrototypeOf} = Object;
 
@@ -95,29 +97,6 @@ const upgrade = (target, Class) => {
 
 const SVG = {};
 const HTML = {};
-const HTMLSpecial = {
-  'Anchor': 'A',
-  'DList': 'DL',
-  'Directory': 'Dir',
-  'Heading': ['H6', 'H5', 'H4', 'H3', 'H2', 'H1'],
-  'Image': 'Img',
-  'OList': 'OL',
-  'Paragraph': 'P',
-  'TableCaption': 'Caption',
-  'TableCell': ['TH', 'TD'],
-  'TableRow': 'TR',
-  'UList': 'UL',
-  // Generic Element based Classes
-  [ELEMENT]: [
-    'Article', 'Aside',
-    'Footer',
-    'Header',
-    'Main',
-    'Nav',
-    'Section',
-    ELEMENT
-  ]
-};
 
 getOwnPropertyNames(window).forEach(name => {
   if (/^(HTML|SVG)/.test(name)) {

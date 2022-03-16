@@ -1,6 +1,6 @@
 {
   "name": "builtin-elements",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "[![Coverage Status](https://coveralls.io/repos/github/WebReflection/builtin-elements/badge.svg?branch=main)](https://coveralls.io/github/WebReflection/builtin-elements?branch=main)",
   "main": "./cjs/index.js",
   "scripts": {

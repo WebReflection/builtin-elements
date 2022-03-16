@@ -99,7 +99,7 @@ const SVG = {};
 const HTML = {};
 
 getOwnPropertyNames(window).forEach(name => {
-  if (/^(HTML|SVG)/.test(name)) {
+  if (/^(HTML|SVG).*Element$/.test(name)) {
     const {$1: Kind} = RegExp;
     const isSVG = Kind == 'SVG';
     const Class = name.slice(Kind.length, -7) || ELEMENT;

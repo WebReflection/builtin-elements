@@ -29,6 +29,7 @@ const HTMLSpecial = {
   'TableCaption': 'Caption',
   'TableCell': ['TH', 'TD'],
   'TableRow': 'TR',
+  'TableSection': ['TFoot', 'THead', 'TBody'],
   'UList': 'UL',
   // Generic Element based Classes
   [ELEMENT]: [

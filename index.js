@@ -100,6 +100,7 @@ self.builtinElements = (function (exports) {
     'TableCaption': 'Caption',
     'TableCell': ['TH', 'TD'],
     'TableRow': 'TR',
+    'TableSection': ['TFoot', 'THead', 'TBody'],
     'UList': 'UL'
   }, ELEMENT, ['Article', 'Aside', 'Footer', 'Header', 'Main', 'Nav', 'Section', ELEMENT]);
 
@@ -178,7 +179,7 @@ self.builtinElements = (function (exports) {
   var SVG = {};
   var HTML = {};
   getOwnPropertyNames(window).forEach(function (name) {
-    if (/^(HTML|SVG)/.test(name)) {
+    if (/^(HTML|SVG).*Element$/.test(name)) {
       var Kind = RegExp.$1;
       var isSVG = Kind == 'SVG';
       var Class = name.slice(Kind.length, -7) || ELEMENT;
@@ -213,4 +214,4 @@ self.builtinElements = (function (exports) {
 
   return exports;
 
-}({}));
+})({});

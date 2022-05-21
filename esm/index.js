@@ -1,7 +1,6 @@
 /*! (c) Andrea Giammarchi - ISC */
 
 import {notify} from 'element-notifier';
-
 import {
   ELEMENT,
   CONSTRUCTOR,
@@ -18,7 +17,6 @@ const {setPrototypeOf} = Object;
 
 const attributes = new WeakSet;
 const observed = new WeakSet;
-const natives = new Set;
 
 const create = (tag, isSVG) => document.createElementNS(
   isSVG ? 'http://www.w3.org/2000/svg' : '',
@@ -42,7 +40,8 @@ const AttributesObserver = new MutationObserver(records => {
  * @param {Element} target the element to downgrade
  */
 export const downgrade = target => {
-  if (!natives.has(target[CONSTRUCTOR])) {
+  const Class = target[CONSTRUCTOR];
+  if (Class !== self[Class.name]) {
     attributes.delete(target);
     observed.delete(target);
     if (DOWNGRADED_CALLBACK in target)

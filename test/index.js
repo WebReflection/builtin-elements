@@ -1,5 +1,6 @@
 const {document, window, MutationObserver} = require('linkedom').parseHTML('<!doctype html><html>');
 
+global.self = window;
 global.window = window;
 global.document = document;
 global.Node = window.Node;
@@ -7,6 +8,7 @@ global.Element = window.Element;
 global.MutationObserver = MutationObserver;
 
 window.HTMLButtonElement = window.HTMLButtonElement;
+window.SVGFEComponentTransferElement = window.SVGElement;
 window.SVGElement = window.SVGElement;
 
 const {HTML, SVG, upgrade, downgrade} = require('../cjs');
@@ -75,6 +77,9 @@ setTimeout(() => {
 
       class MyRect extends SVG.Element {}
       document.body.appendChild(new MyRect);
+
+      class MyFECT extends SVG.FEComponentTransfer {}
+      document.body.appendChild(new MyFECT);
 
       console.log(document.toString());
     });

@@ -9,7 +9,10 @@ export default {
   ],
 
   output: {
-    file: './esm.js',
-    format: 'module'
+    esModule: false,
+    exports: 'named',
+    file: './es.js',
+    format: 'iife',
+    name: 'builtinElements'
   }
 };

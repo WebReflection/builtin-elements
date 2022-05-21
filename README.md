@@ -30,7 +30,7 @@ document.body.appendChild(new MyButton('Hello!'));
 
 ### Examples
 
-  * **[Live Demo](https://webreflection.github.io/builtin-elements/test/)** <sup><sub>(compatible with IE11)</sub></sup>
+  * **[Live Demo](https://webreflection.github.io/builtin-elements/test/)**
   * **[µhtml example](https://codepen.io/WebReflection/pen/rNjJrXv?editors=0010)**
   * **[React example](https://codepen.io/WebReflection/pen/xxgYeyv?editors=0010)**
 

@@ -1,7 +1,6 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
-require('@ungap/is-connected');
 const {notify} = require('element-notifier');
 
 const {
@@ -13,13 +12,13 @@ const {
   DISCONNECTED_CALLBACK,
   UPGRADED_CALLBACK,
   DOWNGRADED_CALLBACK,
-  HTMLSpecial
-} = require('./constants.js');
+  qualify
+} = require('@webreflection/html-shortcuts');
 
-const {getOwnPropertyNames, setPrototypeOf} = Object;
+const {setPrototypeOf} = Object;
 
-const attributes = new WeakMap;
-const observed = new WeakMap;
+const attributes = new WeakSet;
+const observed = new WeakSet;
 const natives = new Set;
 
 const create = (tag, isSVG) => document.createElementNS(
@@ -58,6 +57,7 @@ const downgrade = target => {
     );
   }
 };
+exports.downgrade = downgrade;
 
 /**
  * Upgrade an element to a specific class, if not an instance of it already.
@@ -73,7 +73,7 @@ const upgrade = (target, Class) => {
       target[UPGRADED_CALLBACK]();
     const {observedAttributes} = Class;
     if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in target) {
-      attributes.set(target, 0);
+      attributes.add(target);
       AttributesObserver.observe(target, {
         attributeFilter: observedAttributes,
         attributeOldValue: true,
@@ -87,36 +87,39 @@ const upgrade = (target, Class) => {
       }
     }
     if (CONNECTED_CALLBACK in target || DISCONNECTED_CALLBACK in target) {
-      observed.set(target, 0);
+      observed.add(target);
       if (target.isConnected && CONNECTED_CALLBACK in target)
         target[CONNECTED_CALLBACK]();
     }
   }
   return target;
 };
+exports.upgrade = upgrade;
 
-const SVG = {};
-const HTML = {};
-
-getOwnPropertyNames(window).forEach(name => {
-  if (/^(HTML|SVG).*Element$/.test(name)) {
-    const {$1: Kind} = RegExp;
-    const isSVG = Kind == 'SVG';
-    const Class = name.slice(Kind.length, -7) || ELEMENT;
-    const Namespace = isSVG ? SVG : HTML;
-    const Native = window[name];
-    natives.add(Native);
-    [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
-      const tag = Tag.toLowerCase();
-      Element.tagName = tag;
-      Element[PROTOTYPE] = Native[PROTOTYPE];
-      Namespace[Class] = Namespace[Tag] = Element;
-      function Element() {
+const asLowerCase = Tag => Tag.toLowerCase();
+const createMap = (asTag, qualify, isSVG) => new Proxy(new Map, {
+  get(map, Tag) {
+    if (!map.has(Tag)) {
+      function Builtin() {
         return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
       }
-    });
+      const tag = asTag(Tag);
+      const Native = self[qualify(Tag)];
+      map.set(Tag, setPrototypeOf(Builtin, Native));
+      Builtin.prototype = Native.prototype;
+    }
+    return map.get(Tag);
   }
 });
+
+const HTML = createMap(asLowerCase, qualify, false);
+exports.HTML = HTML;
+const SVG = createMap(
+  Tag => Tag.replace(/^([A-Z]+?)([A-Z][a-z])/, (_, $1, $2) => asLowerCase($1) + $2),
+  Tag => ('SVG' + (Tag === ELEMENT ? '' : Tag) + ELEMENT),
+  true
+);
+exports.SVG = SVG;
 
 const observer = notify((node, connected) => {
   if (observed.has(node)) {
@@ -126,9 +129,4 @@ const observer = notify((node, connected) => {
       node[method]();
   }
 });
-
-exports.HTML = HTML;
-exports.SVG = SVG;
-exports.upgrade = upgrade;
-exports.downgrade = downgrade;
 exports.observer = observer;

@@ -1,6 +1,5 @@
 /*! (c) Andrea Giammarchi - ISC */
 
-import '@ungap/is-connected';
 import {notify} from 'element-notifier';
 
 import {
@@ -12,13 +11,13 @@ import {
   DISCONNECTED_CALLBACK,
   UPGRADED_CALLBACK,
   DOWNGRADED_CALLBACK,
-  HTMLSpecial
-} from './constants.js';
+  qualify
+} from '@webreflection/html-shortcuts';
 
-const {getOwnPropertyNames, setPrototypeOf} = Object;
+const {setPrototypeOf} = Object;
 
-const attributes = new WeakMap;
-const observed = new WeakMap;
+const attributes = new WeakSet;
+const observed = new WeakSet;
 const natives = new Set;
 
 const create = (tag, isSVG) => document.createElementNS(
@@ -42,7 +41,7 @@ const AttributesObserver = new MutationObserver(records => {
  * Set back original element prototype and drops observers.
  * @param {Element} target the element to downgrade
  */
-const downgrade = target => {
+export const downgrade = target => {
   if (!natives.has(target[CONSTRUCTOR])) {
     attributes.delete(target);
     observed.delete(target);
@@ -64,7 +63,7 @@ const downgrade = target => {
  * @param {Function} Class the class the element should be upgraded to
  * @returns {Element} the `target` parameter after upgrade
  */
-const upgrade = (target, Class) => {
+export const upgrade = (target, Class) => {
   if (!(target instanceof Class)) {
     downgrade(target);
     setPrototypeOf(target, Class[PROTOTYPE]);
@@ -72,7 +71,7 @@ const upgrade = (target, Class) => {
       target[UPGRADED_CALLBACK]();
     const {observedAttributes} = Class;
     if (observedAttributes && ATTRIBUTE_CHANGED_CALLBACK in target) {
-      attributes.set(target, 0);
+      attributes.add(target);
       AttributesObserver.observe(target, {
         attributeFilter: observedAttributes,
         attributeOldValue: true,
@@ -86,7 +85,7 @@ const upgrade = (target, Class) => {
       }
     }
     if (CONNECTED_CALLBACK in target || DISCONNECTED_CALLBACK in target) {
-      observed.set(target, 0);
+      observed.add(target);
       if (target.isConnected && CONNECTED_CALLBACK in target)
         target[CONNECTED_CALLBACK]();
     }
@@ -94,30 +93,30 @@ const upgrade = (target, Class) => {
   return target;
 };
 
-const SVG = {};
-const HTML = {};
-
-getOwnPropertyNames(window).forEach(name => {
-  if (/^(HTML|SVG).*Element$/.test(name)) {
-    const {$1: Kind} = RegExp;
-    const isSVG = Kind == 'SVG';
-    const Class = name.slice(Kind.length, -7) || ELEMENT;
-    const Namespace = isSVG ? SVG : HTML;
-    const Native = window[name];
-    natives.add(Native);
-    [].concat(HTMLSpecial[Class] || Class).forEach(Tag => {
-      const tag = Tag.toLowerCase();
-      Element.tagName = tag;
-      Element[PROTOTYPE] = Native[PROTOTYPE];
-      Namespace[Class] = Namespace[Tag] = Element;
-      function Element() {
+const asLowerCase = Tag => Tag.toLowerCase();
+const createMap = (asTag, qualify, isSVG) => new Proxy(new Map, {
+  get(map, Tag) {
+    if (!map.has(Tag)) {
+      function Builtin() {
         return upgrade(create(tag, isSVG), this[CONSTRUCTOR]);
       }
-    });
+      const tag = asTag(Tag);
+      const Native = self[qualify(Tag)];
+      map.set(Tag, setPrototypeOf(Builtin, Native));
+      Builtin.prototype = Native.prototype;
+    }
+    return map.get(Tag);
   }
 });
 
-const observer = notify((node, connected) => {
+export const HTML = createMap(asLowerCase, qualify, false);
+export const SVG = createMap(
+  Tag => Tag.replace(/^([A-Z]+?)([A-Z][a-z])/, (_, $1, $2) => asLowerCase($1) + $2),
+  Tag => ('SVG' + (Tag === ELEMENT ? '' : Tag) + ELEMENT),
+  true
+);
+
+export const observer = notify((node, connected) => {
   if (observed.has(node)) {
     /* c8 ignore next */
     const method = connected ? CONNECTED_CALLBACK : DISCONNECTED_CALLBACK;
@@ -125,5 +124,3 @@ const observer = notify((node, connected) => {
       node[method]();
   }
 });
-
-export {HTML, SVG, upgrade, downgrade, observer};
